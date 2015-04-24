@@ -11,7 +11,7 @@ class MotionDetectorInstantaneous():
     def onChange(self, val): #callback when the user change the detection threshold
         self.threshold = val
     
-    def __init__(self,threshold=8, doRecord=True, showWindows=True):
+    def __init__(self,threshold=5, doRecord=True, showWindows=True):
         self.writer = None
         self.font = None
         self.doRecord=doRecord #Either or not record the moving object
@@ -19,6 +19,7 @@ class MotionDetectorInstantaneous():
         self.frame = None
     
         self.capture=cv.CaptureFromCAM(0)
+        #self.capture = cv.CaptureFromFile(<filename>)
         self.frame = cv.QueryFrame(self.capture) #Take a frame to init recorder
         if doRecord:
             self.initRecorder()
@@ -44,8 +45,7 @@ class MotionDetectorInstantaneous():
         
     def initRecorder(self): #Create the recorder
         codec = cv.CV_FOURCC('M', 'J', 'P', 'G') #('W', 'M', 'V', '2')
-        self.writer=cv.CreateVideoWriter(datetime.now().strftime("%b-%d_%H_%M_%S")+".wmv", codec, 5, cv.GetSize(self.frame), 1)
-        #FPS set to 5 because it seems to be the fps of my cam but should be ajusted to your needs
+        self.writer=cv.CreateVideoWriter(datetime.now().strftime("%b-%d_%H_%M_%S")+".mp4", codec, 5, cv.GetSize(self.frame), 1)
         self.font = cv.InitFont(cv.CV_FONT_HERSHEY_SIMPLEX, 1, 1, 0, 2, 8) #Creates a font
 
     def run(self):
@@ -53,10 +53,11 @@ class MotionDetectorInstantaneous():
         while True:
             
             curframe = cv.QueryFrame(self.capture)
+            #cv.Resize(src, dst, interpolation=CV_INTER_LINEAR)
+
             instant = time.time() #Get timestamp o the frame
-            
             self.processImage(curframe) #Process the image
-            
+            cv.WriteFrame(self.writer, curframe) 
             if not self.isRecording:
                 if self.somethingHasMoved():
                     self.trigger_time = instant #Update the trigger_time
@@ -75,11 +76,13 @@ class MotionDetectorInstantaneous():
             if self.show:
                 cv.ShowImage("Image", curframe)
                 cv.ShowImage("Res", self.res)
-                
+            
             cv.Copy(self.frame2gray, self.frame1gray)
             c=cv.WaitKey(1) % 0x100
             if c==27 or c == 10: #Break if user enters 'Esc'.
-                break            
+                break         
+
+        self.writer = None   
     
     def processImage(self, frame):
         cv.CvtColor(frame, self.frame2gray, cv.CV_RGB2GRAY)

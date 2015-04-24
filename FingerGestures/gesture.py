@@ -18,8 +18,8 @@ def prettify(elem):
 def gesture_recog():
     while(cap.isOpened()):
         ret, img = cap.read()
-        cv2.rectangle(img,(300,300),(0,0),(0,255,0),0)
-        crop_img = img[0:300, 0:300]
+        cv2.rectangle(img,(500,500),(0,0),(0,255,0),0)
+        crop_img = img[0:500, 0:500]
         grey = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
         value = (35, 35)
         blurred = cv2.GaussianBlur(grey, value, 0)
@@ -63,6 +63,7 @@ def gesture_recog():
         frame = ET.SubElement(video, "frame")
         ET.SubElement(frame, "time").text = time.strftime("%H:%M:%S")
         ET.SubElement(frame, "fingers").text = "{}".format((count_defects+1))
+        print "Fingers : {}".format(count_defects+1)
         cv2.imshow('Gesture', img)
         all_img = np.hstack((drawing, crop_img))
         cv2.imshow('Contours', all_img)
