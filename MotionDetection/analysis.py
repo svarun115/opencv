@@ -1,21 +1,25 @@
 import xml.etree.ElementTree as ET
+from collections import Counter
 
 tree = ET.parse('motion_output.xml')
 root = tree.getroot()
-videos = []
+# videos = []
 
 for vid in root.iter('video'):
 	date = vid.find('date').text
 	threshold = eval(vid.find('threshold').text)
 	frames = []
+	#print len(vid.findall('frame'))
 	for frame in vid.findall('frame'):
 		time = frame.find('time').text
 		value = eval(frame.find('value').text)
-		frames.append((time,value))
+		region = eval(frame.find('region').text)
+		frames.append((time,value,region))
 	time = frames[0][0]
 	
 	seconds = []
 	motion_sum = 0
+	regions =[]
 
 	t = frames[0][0]
 	sum = 0
@@ -35,6 +39,7 @@ for vid in root.iter('video'):
 			count = 0
 			sum = 0
 			t = frames[i][0]
+		regions.append(frames[i][2])
 
 	if count == 0:
 		pass
@@ -44,8 +49,20 @@ for vid in root.iter('video'):
 		avg_val = sum/count
 		seconds.append((t,avg_val))
 
+	data = Counter(regions)
+	area = data.most_common(1)[0][0]
+	#print area 
+
+	if area == 1:
+		r = "Top Right"
+	elif area == 2:
+		r = "Top Left"
+	elif area == 3:
+		r = "Bottom left"
+	else:
+		r = "Bottom Right"
 	
-	videos.append((date,time,seconds,threshold))
+	# videos.append((date,time,seconds,threshold))
 	print "Date : ",date
 	print "Time : ",time
 	print "Threshold : ",threshold
@@ -55,5 +72,6 @@ for vid in root.iter('video'):
 	print 
 	print "Percentage of Activity over the video :{} %".format(float(motion_sum)/len(seconds)*100)
 	print
+	print "Most of the activity was in {} region".format(r)
 	print "######################################################"
 	print
